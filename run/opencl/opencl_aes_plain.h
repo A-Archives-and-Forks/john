@@ -25,10 +25,10 @@
 #endif
 
 /*
- * This ruins Intel auto-vectorizing and slows AMD down - doesn't seem to make
- * much of a difference elsewhere.
+ * This slows AMD down - doesn't make much of a difference elsewhere except it
+ * seems to work around some auto-vectorizer bug in old Intel CPU runtimes.
  */
-#if gpu_nvidia(DEVICE_INFO)
+#if gpu_nvidia(DEVICE_INFO) || cpu_intel(DEVICE_INFO)
 #define FULL_UNROLL
 #endif
 
@@ -123,9 +123,9 @@ INLINE void AES_set_encrypt_key(AES_KEY_TYPE void *_userKey,
 	u32 *rk;
 	int i = 0;
 	u32 temp;
-	__local aes_local_t *lt = key->lt;
 
 #ifdef AES_LOCAL_TABLES
+	__local aes_local_t *lt = key->lt;
 	aes_table_init(lt);
 #endif
 
@@ -224,7 +224,9 @@ INLINE void AES_set_decrypt_key(AES_KEY_TYPE void *_userKey,
 	u32 *rk;
 	int i, j;
 	u32 temp;
+#ifdef AES_LOCAL_TABLES
 	__local aes_local_t *lt = key->lt;
+#endif
 
 	/* first, start with an encryption schedule */
 	AES_set_encrypt_key(userKey, bits, key);
@@ -271,7 +273,9 @@ INLINE void AES_encrypt(const uchar *in, uchar *out, const AES_KEY *key)
 {
 	const u32 *rk;
 	u32 s0, s1, s2, s3, t0, t1, t2, t3;
+#ifdef AES_LOCAL_TABLES
 	__local aes_local_t *lt = key->lt;
+#endif
 
 	rk = key->rd_key;
 
@@ -457,7 +461,9 @@ INLINE void AES_decrypt(const uchar *in, uchar *out, const AES_KEY *key)
 {
 	const u32 *rk;
 	u32 s0, s1, s2, s3, t0, t1, t2, t3;
+#ifdef AES_LOCAL_TABLES
 	__local aes_local_t *lt = key->lt;
+#endif
 
 //	assert(in && out && key);
 	rk = key->rd_key;
