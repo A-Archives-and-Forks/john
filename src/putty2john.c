@@ -98,8 +98,10 @@ static char *read_body(FILE * fp)
 			MEM_FREE(text);
 			return NULL;
 		}
-		text[len++] = c;
-		text[len] = '\0';
+		if (len < size - 1) {
+			text[len++] = c;
+			text[len] = '\0';
+		}
 	}
 }
 
